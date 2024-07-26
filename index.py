@@ -13,8 +13,6 @@ fetchAndSave("https://en.wikipedia.org/wiki/Titanic","data/titanic.html")
 with open("data/titanic.html","r") as f:
     html_doc = f.read()
 soup = BeautifulSoup(html_doc,"html.parser")
-contentTable = soup.find_all(class_="vector-toc-link")
-
 
 def getSideContents(soup):
     spans = {}
@@ -53,12 +51,19 @@ def getTable(soup):
               if(tdItems.name=="span"):
                 images=[]
                 for a in tdItems.find_all("a",class_="mw-file-description"):
-                    img = a.find("img")
                     
-                    link = img["srcset"].split(",")[-1][0:-3]
-                   
-                    image = {"link":link}
+                    image={} 
+                    link="https://en.wikipedia.org/"+a["href"]
+                    fetchAndSave(link,"data/temp.html")
+                    with open("data/temp.html","r") as f:
+                        html_doc = f.read()
+                    ImgPage = BeautifulSoup(html_doc,"html.parser")
+
+                    imgDiv = ImgPage.find("div",class_="fullImageLink",id="file")
+                    if(imgDiv!=None):
                     
+                        ImgLink = imgDiv.find("a")["href"][2:]
+                        image= {"link":ImgLink}
                     images.append(image)
                 if(len(images)>0):
                     if contents.get("images") is not None:
@@ -78,8 +83,19 @@ def getTable(soup):
             if(len(huehue)>0):
                 tempefdd.append(huehue[-1])
             for img in trItem.find_all("img"):
-                link = img["srcset"].split(",")[-1][0:-3]   
-                image = {"link":link}    
+                link = "https://en.wikipedia.org/"+img.parent["href"]
+                image={} 
+                fetchAndSave(link,"data/temp.html")
+                with open("data/temp.html","r") as f:
+                    html_doc = f.read()
+                ImgPage = BeautifulSoup(html_doc,"html.parser")
+
+                imgDiv = ImgPage.find("div",class_="fullImageLink",id="file")
+                if(imgDiv!=None):
+                    
+                    ImgLink = imgDiv.find("a")["href"]
+                    image= {"link":ImgLink}
+                
                 
                 contentImages.append(image)
             for items in trItem.find_all():
@@ -98,4 +114,4 @@ def getTable(soup):
     contents["text"]=text
     return contents             
   
-print(getSideContents(soup))
+print(getTable(soup))
