@@ -8,7 +8,7 @@ def fetchAndSave(url,path):
         f.write(r.text)
     print("\n File Saved \n")
 
-fetchAndSave("https://en.wikipedia.org/wiki/Titanic","data/titanic.html")
+fetchAndSave("https://en.wikipedia.org/wiki/Narendra_Modi","data/titanic.html")
 
 with open("data/titanic.html","r") as f:
     html_doc = f.read()
@@ -72,7 +72,7 @@ def getTable(soup):
                     else:
                         contents["images"] =images
         
-        tdHeadingItem =tr.find("td",style="font-weight: bold")
+        tdHeadingItem =tr.find("th")
         if(tdHeadingItem!=None):
             contentHeading=list(tdHeadingItem.stripped_strings)[-1]
             isContent=True
@@ -98,20 +98,71 @@ def getTable(soup):
                 
                 
                 contentImages.append(image)
-            for items in trItem.find_all():
-                itemText = ""
-                for element in td.descendants:
-                    if isinstance(element, str):
-                        itemText+=(element.strip())
-                contentText=itemText
+            itemText = trItem.get_text(separator=" ")
+                   
+                        
+            contentText+=itemText
                 
             
                     
         if(isContent):
             contentItem={"contentHeading":contentHeading,"contentImages":contentImages,"contentText":contentText}
+            
             text.append(contentItem)
-       
-    contents["text"]=text
+        print("contentHeading: ",contentHeading," contentImages: ",contentImages," contentText: ",contentText)
+        contents["text"]=text
     return contents             
   
-print(getTable(soup))
+ 
+def getMainText(soup):
+    sups = []
+    contentImages=[]
+    links = []
+    content = []
+
+    for sup in soup.find_all("sup",class_="reference"):
+        a = sup.find("a")
+        if(a!=None):
+            temp = {a.text:a["href"]}
+            sups.append(temp)
+        sup.decompose()
+        
+    bodyContent = soup.find("div",id="bodyContent");
+    figureTags = bodyContent.find_all("figure");
+    for figure in figureTags:
+        link = "https://en.wikipedia.org/"+figure.find("a")["href"]
+        image={} 
+        fetchAndSave(link,"data/temp.html")
+        with open("data/temp.html","r") as f:
+            html_doc = f.read()
+        ImgPage = BeautifulSoup(html_doc,"html.parser")
+        imgDiv = ImgPage.find("div",class_="fullImageLink",id="file")
+        if(imgDiv!=None):
+            
+            ImgLink = imgDiv.find("a")["href"]
+            image= {"link":ImgLink[2:]}
+                
+        contentImages.append(image)
+        figure.decompose()
+    bodyContent = soup.find("div",id="bodyContent")
+    anchorTags = bodyContent.find_all("a")
+    for anchor in anchorTags:
+        if(anchor.has_attr("href") and anchor.text!=None):
+            
+            links.append({anchor.get_text(separator=" "):anchor["href"]})
+    
+    items = bodyContent.find_all(["p","h1","h2","h3","h4","h5","h6"])
+    for item in items:
+        itemContent ={}
+        if(item.name!="p"):
+            if(item.text!=None):
+                itemContent["heading"]=item.get_text(separator=" ")
+        else:
+            if(item.text!=None):
+                itemContent["paragraph"]=item.get_text(separator=" ")
+        content.append(itemContent)
+        
+    return {"sups":sup,"contentImages":contentImages,"links":links,"content":content}
+
+mainText=getMainText(soup)
+print(mainText["content"])
