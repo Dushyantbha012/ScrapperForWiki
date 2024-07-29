@@ -23,7 +23,7 @@ def getSideContents(soup):
             for span in div.find_all('span'):
                 if not span.has_attr('id') and not span.has_attr('class'):
                     spans[span.string]=linkText
-                    print(span.string," : ",linkText)
+                    
     return spans
 
 
@@ -32,8 +32,7 @@ def getTable(soup):
     contents ={};
     tempefdd=[]
     text=[];
-    headings=[];
-    tableItems=[];
+   
     tbody = soup.find("table",class_="infobox")
     heading = 1;
     for tr in tbody.find_all("tr"):
@@ -109,7 +108,6 @@ def getTable(soup):
             contentItem={"contentHeading":contentHeading,"contentImages":contentImages,"contentText":contentText}
             
             text.append(contentItem)
-        print("contentHeading: ",contentHeading," contentImages: ",contentImages," contentText: ",contentText)
         contents["text"]=text
     return contents             
   
@@ -123,8 +121,9 @@ def getMainText(soup):
     for sup in soup.find_all("sup",class_="reference"):
         a = sup.find("a")
         if(a!=None):
-            temp = {a.text:a["href"]}
-            sups.append(temp)
+            if a.text!=None and a.has_attr("href"):
+                temp = {a.text:a["href"]}
+                sups.append(temp)
         sup.decompose()
         
     bodyContent = soup.find("div",id="bodyContent");
@@ -148,8 +147,11 @@ def getMainText(soup):
     anchorTags = bodyContent.find_all("a")
     for anchor in anchorTags:
         if(anchor.has_attr("href") and anchor.text!=None):
+            linkAddr = anchor["href"]
             
-            links.append({anchor.get_text(separator=" "):anchor["href"]})
+            if(linkAddr[:5]=="/wiki"):
+                linkAddr="https://en.wikipedia.org"+linkAddr
+            links.append({anchor.get_text(separator=" "):linkAddr})
     
     items = bodyContent.find_all(["p","h1","h2","h3","h4","h5","h6"])
     for item in items:
@@ -162,7 +164,5 @@ def getMainText(soup):
                 itemContent["paragraph"]=item.get_text(separator=" ")
         content.append(itemContent)
         
-    return {"sups":sup,"contentImages":contentImages,"links":links,"content":content}
+    return {"sups":sups,"contentImages":contentImages,"links":links,"content":content}
 
-mainText=getMainText(soup)
-print(mainText["content"])
