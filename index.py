@@ -8,9 +8,9 @@ def fetchAndSave(url,path):
         f.write(r.text)
     print("\n File Saved \n")
 
-fetchAndSave("https://en.wikipedia.org/wiki/Narendra_Modi","data/titanic.html")
+fetchAndSave("https://en.wikipedia.org/wiki/Sulfuric_acid","data/main.html")
 
-with open("data/titanic.html","r") as f:
+with open("data/main.html","r") as f:
     html_doc = f.read()
 soup = BeautifulSoup(html_doc,"html.parser")
 
@@ -130,20 +130,23 @@ def getMainText(soup):
     bodyContent = soup.find("div",id="bodyContent");
     figureTags = bodyContent.find_all("figure");
     for figure in figureTags:
-        link = figure.find("a")["href"]
-        tempLink = "https://en.wikipedia.org/"+link
-        image={} 
-        fetchAndSave(tempLink,"data/temp.html")
-        with open("data/temp.html","r") as f:
-            html_doc = f.read()
-        ImgPage = BeautifulSoup(html_doc,"html.parser")
-        imgDiv = ImgPage.find("div",class_="fullImageLink",id="file")
-        if(imgDiv!=None and imgDiv.find("a").has_attr("href")):
-            
-            link = imgDiv.find("a")["href"][2:]
-        image= {"link":link}
-                
-        contentImages.append(image)
+        aLink = figure.find("a")
+        if(aLink!=None ):
+            if(aLink.has_attr("href")):
+                link = aLink["href"]
+                tempLink = "https://en.wikipedia.org/"+link
+                image={} 
+                fetchAndSave(tempLink,"data/temp.html")
+                with open("data/temp.html","r") as f:
+                    html_doc = f.read()
+                ImgPage = BeautifulSoup(html_doc,"html.parser")
+                imgDiv = ImgPage.find("div",class_="fullImageLink",id="file")
+                if(imgDiv!=None and imgDiv.find("a").has_attr("href")):
+
+                    link = imgDiv.find("a")["href"][2:]
+                image= {"link":link}
+
+                contentImages.append(image)
         figure.decompose()
     bodyContent = soup.find("div",id="bodyContent")
     anchorTags = bodyContent.find_all("a")
@@ -167,3 +170,5 @@ def getMainText(soup):
         content.append(itemContent)
         
     return {"sups":sups,"contentImages":contentImages,"links":links,"content":content}
+
+print(getMainText(soup)["contentImages"])
