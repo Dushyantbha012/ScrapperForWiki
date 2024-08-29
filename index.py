@@ -8,7 +8,7 @@ def fetchAndSave(url,path):
         f.write(r.text)
     print("\n File Saved \n")
 
-fetchAndSave("https://en.wikipedia.org/wiki/Sulfuric_acid","data/main.html")
+fetchAndSave("https://en.wikipedia.org/wiki/Titanic","data/main.html")
 
 with open("data/main.html","r") as f:
     html_doc = f.read()
@@ -94,9 +94,12 @@ def getTable(soup):
                 if(imgDiv!=None and imgDiv.find("a").has_attr("href")):
                     
                     link = imgDiv.find("a")["href"]
-                image= {"link":link}
-                
-                
+               
+                description = "";
+                descBox = ImgPage.findAll("td",class_="description")
+                for d in descBox:
+                    description = d.get_text(separator=" ")+" "
+                image= {"link":link,"description":description}
                 contentImages.append(image)
             itemText = trItem.get_text(separator=" ")
                    
@@ -144,7 +147,12 @@ def getMainText(soup):
                 if(imgDiv!=None and imgDiv.find("a").has_attr("href")):
 
                     link = imgDiv.find("a")["href"][2:]
-                image= {"link":link}
+                description = "";
+                descBox = ImgPage.findAll("td",class_="description")
+                for d in descBox:
+                    description = d.get_text(separator=" ")+" "
+                
+                image= {"link":link,"description":description}
 
                 contentImages.append(image)
         figure.decompose()
@@ -171,4 +179,4 @@ def getMainText(soup):
         
     return {"sups":sups,"contentImages":contentImages,"links":links,"content":content}
 
-print(getMainText(soup)["contentImages"])
+getMainText(soup)
